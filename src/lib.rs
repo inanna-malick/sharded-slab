@@ -519,7 +519,7 @@ unsafe impl<T: Sync, C: cfg::Config> Sync for Slab<T, C> {}
 
 impl<'a, T, C: cfg::Config> Guard<'a, T, C> {
     /// Returns the key used to access the guard.
-    pub fn key(&self) -> usize {
+    pub fn key(&self) -> C::Key {
         self.key
     }
 }

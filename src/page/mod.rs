@@ -178,7 +178,7 @@ where
     pub(crate) fn get<U>(
         &self,
         addr: Addr<C>,
-        idx: usize,
+        idx: C::Key,
         f: impl FnOnce(&T) -> &U,
     ) -> Option<slot::Guard<'_, U, C>> {
         let poff = addr.offset() - self.prev_sz;
@@ -266,7 +266,7 @@ where
 {
     /// Allocate and initialize a new slot.
     ///
-    /// It does this via the provided initializatin function `func`. Once it get's the generation
+    /// It does this via the provided initialization function `func`. Once it get's the generation
     /// number for the new slot, it performs the operations required to return the key to the
     /// caller.]
     pub(crate) fn init_with<F>(&self, local: &Local, func: F) -> Option<usize>

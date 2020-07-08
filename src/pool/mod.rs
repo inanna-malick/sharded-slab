@@ -101,7 +101,7 @@ where
 {
     inner: page::slot::Guard<'a, T, C>,
     shard: &'a Shard<T, C>,
-    key: usize,
+    key: C::Key,
 }
 
 impl<T, C> Pool<T, C>
@@ -162,7 +162,7 @@ where
     /// assert_eq!(pool.get(key).unwrap(), String::from("hello world"));
     /// assert!(pool.get(12345).is_none());
     /// ```
-    pub fn get(&self, key: usize) -> Option<PoolGuard<'_, T, C>> {
+    pub fn get(&self, key: C::Key) -> Option<PoolGuard<'_, T, C>> {
         let tid = C::unpack_tid(key);
 
         test_println!("pool: get{:?}; current={:?}", tid, Tid::<C>::current());
@@ -208,7 +208,7 @@ where
     /// assert_eq!(pool.clear(key), false);
     /// ```
     /// [`clear`]: #method.clear
-    pub fn clear(&self, key: usize) -> bool {
+    pub fn clear(&self, key: C::Key) -> bool {
         let tid = C::unpack_tid(key);
 
         let shard = self.shards.get(tid.as_usize());
@@ -265,7 +265,7 @@ where
     C: cfg::Config,
 {
     /// Returns the key used to access this guard
-    pub fn key(&self) -> usize {
+    pub fn key(&self) -> C::Key {
         self.key
     }
 }

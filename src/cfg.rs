@@ -8,6 +8,8 @@ use std::{fmt, marker::PhantomData};
 pub trait Config: Sized {
     type Key: Copy;
 
+    fn key_to_usize(idx: Self::Key) -> usize;
+
     /// The maximum number of threads which can access the slab.
     ///
     /// This value (rounded to a power of two) determines the number of shards
@@ -95,27 +97,24 @@ pub(crate) trait CfgPrivate: Config {
 
     #[inline(always)]
     fn unpack<A: Pack<Self>>(packed: Self::Key) -> A {
-        A::from_packed(packed)
+        A::from_packed(Self::key_to_usize(packed))
     }
 
     #[inline(always)]
-    fn unpack_addr(packed: usize) -> Addr<Self> {
+    fn unpack_addr(packed: Self::Key) -> Addr<Self> {
         Self::unpack(packed)
     }
 
     #[inline(always)]
-    // NOTE: I think this is just unpacking tid from C::Key, nothing else - idk, try to confirm
-    fn unpack_tid(packed: usize) -> crate::Tid<Self> {
+    fn unpack_tid(packed: Self::Key) -> crate::Tid<Self> {
         Self::unpack(packed)
     }
 
-    // NOTE: seems to be Key based on usage patterns
-    fn unpack_gen(packed: usize) -> Generation<Self>;
+    fn unpack_gen(packed: Self::Key) -> Generation<Self>;
 }
-impl<C: Config> CfgPrivate for C
-{
+impl<C: Config> CfgPrivate for C {
     #[inline(always)]
-    fn unpack_gen(packed: usize) -> Generation<Self> {
+    fn unpack_gen(packed: Self::Key) -> Generation<Self> {
         Self::unpack(packed)
     }
 }
@@ -141,6 +140,10 @@ pub(crate) const fn next_pow2(n: usize) -> usize {
 // === impl DefaultConfig ===
 impl Config for DefaultConfig {
     type Key = usize;
+
+    fn key_to_usize(idx: Self::Key) -> usize {
+        idx
+    }
 
     const INITIAL_PAGE_SIZE: usize = 32;
 
