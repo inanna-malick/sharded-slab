@@ -356,7 +356,7 @@ impl<T, C: cfg::Config> Slab<T, C> {
     /// assert!(!slab.contains(key));
     /// ```
     /// [`take`]: #method.take
-    pub fn remove(&self, idx: usize) -> bool {
+    pub fn remove(&self, idx: C::Key) -> bool {
         // The `Drop` impl for `Guard` calls `remove_local` or `remove_remote` based
         // on where the guard was dropped from. If the dropped guard was the last one, this will
         // call `Slot::remove_value` which actually clears storage.
@@ -425,7 +425,7 @@ impl<T, C: cfg::Config> Slab<T, C> {
     /// assert!(!slab.contains(key));
     /// ```
     /// [`remove`]: #method.remove
-    pub fn take(&self, idx: usize) -> Option<T> {
+    pub fn take(&self, idx: C::Key) -> Option<T> {
         let tid = C::unpack_tid(idx);
 
         test_println!("rm {:?}", tid);
@@ -452,7 +452,7 @@ impl<T, C: cfg::Config> Slab<T, C> {
     /// assert_eq!(slab.get(key).unwrap(), "hello world");
     /// assert!(slab.get(12345).is_none());
     /// ```
-    pub fn get(&self, key: usize) -> Option<Guard<'_, T, C>> {
+    pub fn get(&self, key: C::Key) -> Option<Guard<'_, T, C>> {
         let tid = C::unpack_tid(key);
 
         test_println!("get {:?}; current={:?}", tid, Tid::<C>::current());
@@ -479,7 +479,7 @@ impl<T, C: cfg::Config> Slab<T, C> {
     /// slab.take(key).unwrap();
     /// assert!(!slab.contains(key));
     /// ```
-    pub fn contains(&self, key: usize) -> bool {
+    pub fn contains(&self, key: C::Key) -> bool {
         self.get(key).is_some()
     }
 
@@ -620,8 +620,9 @@ pub(crate) trait Pack<C: cfg::Config>: Sized {
         (to & !Self::MASK) | (value << Self::SHIFT)
     }
 
+    // NOTE: reverting this to usize (from C::Key, may be good type transform boundary)
     #[inline(always)]
-    fn from_packed(from: C::Key) -> Self {
+    fn from_packed(from: usize) -> Self {
         let value = (from & Self::MASK) >> Self::SHIFT;
         debug_assert!(value <= Self::BITS);
         Self::from_usize(value)

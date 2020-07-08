@@ -6,7 +6,7 @@ use crate::Pack;
 use std::{fmt, marker::PhantomData};
 /// Configuration parameters which can be overridden to tune the behavior of a slab.
 pub trait Config: Sized {
-    type Key;
+    type Key: Copy;
 
     /// The maximum number of threads which can access the slab.
     ///
@@ -104,15 +104,15 @@ pub(crate) trait CfgPrivate: Config {
     }
 
     #[inline(always)]
+    // NOTE: I think this is just unpacking tid from C::Key, nothing else - idk, try to confirm
     fn unpack_tid(packed: usize) -> crate::Tid<Self> {
         Self::unpack(packed)
     }
 
-    fn unpack_gen(packed: C::Key) -> Generation<Self>;
+    // NOTE: seems to be Key based on usage patterns
+    fn unpack_gen(packed: usize) -> Generation<Self>;
 }
 impl<C: Config> CfgPrivate for C
-where
-    C::Config = usize,
 {
     #[inline(always)]
     fn unpack_gen(packed: usize) -> Generation<Self> {
@@ -181,6 +181,7 @@ mod tests {
         // counter. This will only leave 1 bit to use for the slot reference
         // counter, which will fail to validate.
         impl Config for GiantGenConfig {
+            type Key = usize;
             const INITIAL_PAGE_SIZE: usize = 1;
             const MAX_THREADS: usize = 1;
             const MAX_PAGES: usize = 1;

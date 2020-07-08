@@ -50,7 +50,7 @@ where
     #[inline(always)]
     pub(crate) fn get<U>(
         &self,
-        idx: usize,
+        idx: C::Key,
         f: impl FnOnce(&T) -> &U,
     ) -> Option<page::slot::Guard<'_, U, C>> {
         debug_assert_eq!(Tid::<C>::from_packed(idx).as_usize(), self.tid);
@@ -84,7 +84,7 @@ where
     C: cfg::Config,
 {
     /// Remove an item on the shard's local thread.
-    pub(crate) fn take_local(&self, idx: usize) -> Option<T> {
+    pub(crate) fn take_local(&self, idx: C::Key) -> Option<T> {
         debug_assert_eq!(Tid::<C>::from_packed(idx).as_usize(), self.tid);
         let (addr, page_index) = page::indices::<C>(idx);
 
@@ -119,7 +119,7 @@ where
         self.shared[page_index].remove(addr, C::unpack_gen(idx), self.local(page_index))
     }
 
-    pub(crate) fn remove_remote(&self, idx: usize) -> bool {
+    pub(crate) fn remove_remote(&self, idx: C::Key) -> bool {
         debug_assert_eq!(Tid::<C>::from_packed(idx).as_usize(), self.tid);
         let (addr, page_index) = page::indices::<C>(idx);
 
@@ -159,7 +159,7 @@ where
         None
     }
 
-    pub(crate) fn mark_clear_local(&self, idx: usize) -> bool {
+    pub(crate) fn mark_clear_local(&self, idx: C::Key) -> bool {
         debug_assert_eq!(Tid::<C>::from_packed(idx).as_usize(), self.tid);
         let (addr, page_index) = page::indices::<C>(idx);
 
@@ -170,7 +170,7 @@ where
         self.shared[page_index].mark_clear(addr, C::unpack_gen(idx), self.local(page_index))
     }
 
-    pub(crate) fn mark_clear_remote(&self, idx: usize) -> bool {
+    pub(crate) fn mark_clear_remote(&self, idx: C::Key) -> bool {
         debug_assert_eq!(Tid::<C>::from_packed(idx).as_usize(), self.tid);
         let (addr, page_index) = page::indices::<C>(idx);
 
