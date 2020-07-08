@@ -96,7 +96,7 @@ where
     }
 
     /// Remove an item, while on a different thread from the shard's local thread.
-    pub(crate) fn take_remote(&self, idx: usize) -> Option<T> {
+    pub(crate) fn take_remote(&self, idx: C::Key) -> Option<T> {
         debug_assert_eq!(Tid::<C>::from_packed(idx).as_usize(), self.tid);
         debug_assert!(Tid::<C>::current().as_usize() != self.tid);
 
@@ -108,7 +108,7 @@ where
         shared.take(addr, C::unpack_gen(idx), shared.free_list())
     }
 
-    pub(crate) fn remove_local(&self, idx: usize) -> bool {
+    pub(crate) fn remove_local(&self, idx: C::Key) -> bool {
         debug_assert_eq!(Tid::<C>::from_packed(idx).as_usize(), self.tid);
         let (addr, page_index) = page::indices::<C>(idx);
 

@@ -253,7 +253,7 @@ pub struct Slab<T, C: cfg::Config = DefaultConfig> {
 pub struct Guard<'a, T, C: cfg::Config = DefaultConfig> {
     inner: page::slot::Guard<'a, T, C>,
     shard: &'a Shard<Option<T>, C>,
-    key: usize,
+    key: C::Key,
 }
 
 impl<T> Slab<T> {
@@ -621,7 +621,7 @@ pub(crate) trait Pack<C: cfg::Config>: Sized {
     }
 
     #[inline(always)]
-    fn from_packed(from: usize) -> Self {
+    fn from_packed(from: C::Key) -> Self {
         let value = (from & Self::MASK) >> Self::SHIFT;
         debug_assert!(value <= Self::BITS);
         Self::from_usize(value)

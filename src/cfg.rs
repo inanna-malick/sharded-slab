@@ -6,6 +6,8 @@ use crate::Pack;
 use std::{fmt, marker::PhantomData};
 /// Configuration parameters which can be overridden to tune the behavior of a slab.
 pub trait Config: Sized {
+    type Key;
+
     /// The maximum number of threads which can access the slab.
     ///
     /// This value (rounded to a power of two) determines the number of shards
@@ -92,7 +94,7 @@ pub(crate) trait CfgPrivate: Config {
     }
 
     #[inline(always)]
-    fn unpack<A: Pack<Self>>(packed: usize) -> A {
+    fn unpack<A: Pack<Self>>(packed: Self::Key) -> A {
         A::from_packed(packed)
     }
 
@@ -106,12 +108,17 @@ pub(crate) trait CfgPrivate: Config {
         Self::unpack(packed)
     }
 
+    fn unpack_gen(packed: C::Key) -> Generation<Self>;
+}
+impl<C: Config> CfgPrivate for C
+where
+    C::Config = usize,
+{
     #[inline(always)]
     fn unpack_gen(packed: usize) -> Generation<Self> {
         Self::unpack(packed)
     }
 }
-impl<C: Config> CfgPrivate for C {}
 
 /// Default slab configuration values.
 #[derive(Copy, Clone)]
@@ -133,6 +140,8 @@ pub(crate) const fn next_pow2(n: usize) -> usize {
 
 // === impl DefaultConfig ===
 impl Config for DefaultConfig {
+    type Key = usize;
+
     const INITIAL_PAGE_SIZE: usize = 32;
 
     #[cfg(target_pointer_width = "64")]
