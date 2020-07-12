@@ -3,12 +3,16 @@ use crate::page::{
     Addr,
 };
 use crate::Pack;
+use std::ops::{BitAnd, BitOr, Shr};
 use std::{fmt, marker::PhantomData};
+
 /// Configuration parameters which can be overridden to tune the behavior of a slab.
 pub trait Config: Sized {
-    type Key: Copy;
-
-    fn key_to_usize(idx: Self::Key) -> usize;
+    type Key: Copy
+    // TODO: put these in single trait to group semantically - cleaner interface, mb base trait for Pack
+        + BitAnd<usize, Output = Self::Key>
+        + BitOr<usize, Output = Self::Key>
+        + Shr<usize, Output = usize>;
 
     /// The maximum number of threads which can access the slab.
     ///
@@ -97,7 +101,7 @@ pub(crate) trait CfgPrivate: Config {
 
     #[inline(always)]
     fn unpack<A: Pack<Self>>(packed: Self::Key) -> A {
-        A::from_packed(Self::key_to_usize(packed))
+        A::from_packed(packed)
     }
 
     #[inline(always)]

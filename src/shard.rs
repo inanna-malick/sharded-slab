@@ -141,7 +141,7 @@ where
     T: Clear + Default,
     C: cfg::Config,
 {
-    pub(crate) fn init_with<F>(&self, mut func: F) -> Option<usize>
+    pub(crate) fn init_with<F>(&self, mut func: F) -> Option<C::Key>
     where
         F: FnMut(&page::slot::Slot<T, C>) -> Option<page::slot::Generation<C>>,
     {

@@ -304,7 +304,7 @@ impl<T, C: cfg::Config> Slab<T, C> {
     /// let key = slab.insert("hello world").unwrap();
     /// assert_eq!(slab.get(key).unwrap(), "hello world");
     /// ```
-    pub fn insert(&self, value: T) -> Option<usize> {
+    pub fn insert(&self, value: T) -> Option<C::Key> {
         let tid = Tid::<C>::current();
         test_println!("insert {:?}", tid);
         let mut value = Some(value);
@@ -568,6 +568,7 @@ where
 
 // === pack ===
 
+// ASSERTION: this is _only_ used to pack values into keys
 pub(crate) trait Pack<C: cfg::Config>: Sized {
     // ====== provided by each implementation =================================
 
@@ -613,7 +614,7 @@ pub(crate) trait Pack<C: cfg::Config>: Sized {
     fn from_usize(val: usize) -> Self;
 
     #[inline(always)]
-    fn pack(&self, to: usize) -> usize {
+    fn pack(&self, to: C::Key) -> C::Key {
         let value = self.as_usize();
         debug_assert!(value <= Self::BITS);
 
@@ -622,7 +623,7 @@ pub(crate) trait Pack<C: cfg::Config>: Sized {
 
     // NOTE: reverting this to usize (from C::Key, may be good type transform boundary)
     #[inline(always)]
-    fn from_packed(from: usize) -> Self {
+    fn from_packed(from: C::Key) -> Self {
         let value = (from & Self::MASK) >> Self::SHIFT;
         debug_assert!(value <= Self::BITS);
         Self::from_usize(value)
@@ -644,11 +645,11 @@ impl<C: cfg::Config> Pack<C> for () {
         unreachable!()
     }
 
-    fn pack(&self, _to: usize) -> usize {
+    fn pack(&self, _to: C::Key) -> C::Key {
         unreachable!()
     }
 
-    fn from_packed(_from: usize) -> Self {
+    fn from_packed(_from: C::Key) -> Self {
         unreachable!()
     }
 }

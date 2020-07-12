@@ -269,7 +269,7 @@ where
     /// It does this via the provided initialization function `func`. Once it get's the generation
     /// number for the new slot, it performs the operations required to return the key to the
     /// caller.]
-    pub(crate) fn init_with<F>(&self, local: &Local, func: F) -> Option<usize>
+    pub(crate) fn init_with<F>(&self, local: &Local, func: F) -> Option<C::Key>
     where
         F: FnOnce(&Slot<T, C>) -> Option<slot::Generation<C>>,
     {
@@ -289,6 +289,9 @@ where
             func(slot)
         })?;
 
+        // need to turn this into key somehow - also need to figure out generation,
+        // so that '0' can be skipped
+        // also, I should probably trace where `head` is coming from - pop local? what is Local?
         let index = head + self.prev_sz;
 
         test_println!("-> initialize_new_slot: insert at offset: {}", index);
